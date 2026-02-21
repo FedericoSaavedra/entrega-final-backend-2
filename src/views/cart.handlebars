@@ -1,15 +1,38 @@
 <div class="box">
-    <div class="view-products"><a id="button-products" class="button" href="/products">Volver</a></div>
-    <h1>Productos</h1>
-    <div class="products-box">
-        {{#each products}}
-            <div class="product-card">
-                <h3>{{this.product.title}}</h3>
-                <hr>
-                <p>Categoria: {{this.product.category}}</p>
-                <p>Precio: $ {{this.product.price}}</p>
-                <p>Cantidad: {{this.quantity}}</p>
-            </div>
-        {{/each}}
-    </div>
+    <h1>🛒 Mi Carrito</h1>
+    <hr>
+    {{#if products.length}}
+        <div class="products-box">
+            {{#each products}}
+                <div class="product-card" style="border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+                    <h3>{{this.product.title}}</h3>
+                    <p>Precio unitario: ${{this.product.price}}</p>
+                    <p>Cantidad: {{this.quantity}}</p>
+                    <button onclick="deleteProduct('{{../cartId}}', '{{this.product._id}}')"id="button-delete"
+                            style="background-color: #ff4c4c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;">
+                        Eliminar
+                    </button>
+                </div>
+            {{/each}}
+        </div>
+
+        <div style="margin-top: 30px; display: flex; gap: 20px; justify-content: center;">
+            <button onclick="emptyCart('{{cartId}}')" 
+                    style="background-color: #ff9800; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Vaciar Carrito
+            </button>
+            
+            <button onclick="finalizePurchase('{{cartId}}')" 
+                    style="background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                Finalizar Compra
+            </button>
+        </div>
+    {{else}}
+        <div style="text-align: center; padding: 50px;">
+            <p style="font-size: 1.5rem; color: #666;">Tu carrito está vacío.</p>
+            <a href="/" class="button" style="display: inline-block; margin-top: 20px; background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Volver a la tienda</a>
+        </div>
+    {{/if}}
 </div>
+
+<script src="/js/ecommerce.js"></script>

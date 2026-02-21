@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import User from '../dao/models/user.js';
+import User from '../dao/models/userModel.js';
 import { createHash, isValidPassword } from '../utils/hash.js';
+// 1. Importamos el manager de carritos
+import { cartDBManager } from '../dao/cartDBManager.js'; 
 
 const router = Router();
+// 2. Instanciamos el manager
+const cartDao = new cartDBManager(); 
 
 // --- REGISTRO ---
 router.post('/register', async (req, res) => {
@@ -13,18 +17,23 @@ router.post('/register', async (req, res) => {
         const exists = await User.findOne({ email });
         if (exists) return res.status(400).send({ status: "error", error: "El usuario ya existe" });
 
+        // 3. Creamos un carrito vacío ANTES de guardar al usuario
+        const newCart = await cartDao.createCart();
+
         const user = {
             first_name,
             last_name,
             email,
             age,
-            password: createHash(password), // Encriptación solicitada
-            role: 'user' // Valor por defecto
+            password: createHash(password),
+            role: 'user',
+            cart: newCart._id // 4. Le asignamos el ID del carrito recién creado
         };
 
         const result = await User.create(user);
         res.send({ status: "success", message: "Usuario registrado", payload: result._id });
     } catch (error) {
+        console.error("Error en registro:", error);
         res.status(500).send({ status: "error", error: "Error en el servidor" });
     }
 });
@@ -38,19 +47,18 @@ router.post('/login', async (req, res) => {
 
         if (!isValidPassword(user, password)) return res.status(401).send({ status: "error", error: "Contraseña incorrecta" });
 
-        // Datos que viajan en el token (sin la contraseña)
+        // Datos que viajan en el token
         const tokenUser = {
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
             age: user.age,
             role: user.role,
-            cart: user.cart
+            cart: user.cart // Ahora esto SÍ tendrá un ID válido
         };
 
         const token = jwt.sign({ user: tokenUser }, 'coderSecret', { expiresIn: '24h' });
 
-        // Respuesta con cookie HTTP-Only para mayor seguridad
         res.cookie('coderCookieToken', token, { maxAge: 60 * 60 * 1000 * 24, httpOnly: true })
            .send({ status: "success", message: "Login exitoso" });
            
@@ -59,10 +67,15 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// --- RUTA CURRENT (VALIDACIÓN) ---
+// --- RUTA CURRENT ---
 router.get('/current', passport.authenticate('jwt', { session: false }), (req, res) => {
-    // Si llega aquí, es porque el token es válido. Passport guarda el payload en req.user
     res.send({ status: "success", payload: req.user });
+});
+
+// --- LOGOUT ---
+router.get('/logout', (req, res) => {
+    res.clearCookie('coderCookieToken');
+    res.redirect('/login');
 });
 
 export default router;

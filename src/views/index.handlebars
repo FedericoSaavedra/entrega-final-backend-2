@@ -1,5 +1,20 @@
 <div class="box">
-    <div class="view-cart"><a id="button-cart" class="button">Ver Carrito</a></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd;">
+        <div>
+            <h2 style="margin: 0; color: #333;">¡Bienvenido, {{user.first_name}} {{user.last_name}}!</h2>
+            <p style="margin: 5px 0 0 0; color: #666;">Rol: <strong>{{user.role}}</strong> | Email: {{user.email}}</p>
+        </div>
+        <button onclick="logout()" id="button-delete" style="background-color: #ff4c4c; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer;">Cerrar Sesión</button>
+    </div>
+    <div style="text-align: right; margin-bottom: 20px;">
+        {{#if user.cart}}
+            <a href="/cart/{{user.cart}}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+                🛒 Ver mi Carrito
+            </a>
+        {{else}}
+            <span style="color: red;">Error: Usuario sin carrito</span>
+        {{/if}}
+    </div>
     <h1>Productos</h1>
     <div class="products-box">
         {{#each products}}
@@ -9,7 +24,7 @@
                 <p>Categoria: {{this.category}}</p>
                 <p>Descripción: {{this.description}}</p>
                 <p>Precio: $ {{this.price}}</p>
-                <button id="button-create" onclick="addToCart('{{this._id}}')">Agregar al Carrito</button>
+                <button id="button-create" onclick="addToCart('{{../user.cart}}', '{{this._id}}')">Agregar al Carrito</button>
             </div>
         {{/each}}
     </div>
@@ -24,3 +39,10 @@
 </div>
 
 <script src="/js/ecommerce.js"></script>
+
+<script>
+    function logout() {
+        // Redirigimos al backend para que destruya la cookie segura
+        window.location.href = "/api/sessions/logout";
+    }
+</script>
